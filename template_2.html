@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{TITLE}}</title>
+  <style>
+    :root{
+      --bg:#0b0c10; --panel:#11131a; --panel2:#0f1117;
+      --text:#e8e8ea; --muted:#a7a7b0; --border:rgba(255,255,255,0.08);
+      --good:#2ecc71; --bad:#e74c3c; --accent:#7aa2ff;
+    }
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+    .topbar{ position:sticky; top:0; z-index:10; background:rgba(11,12,16,0.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); }
+    .container{ max-width:1280px; margin:0 auto; padding:14px 16px; }
+    .title{ font-size:18px; font-weight:650; margin:0 0 10px 0; }
+
+    .controls{
+      display:grid;
+      grid-template-columns: 220px 220px 180px repeat(var(--exp-cols), 190px) 1fr;
+      gap:10px; align-items:end;
+    }
+    .control{ display:flex; flex-direction:column; gap:6px; }
+    label{ font-size:12px; color:var(--muted); }
+    select,input[type="text"]{
+      background:var(--panel); color:var(--text);
+      border:1px solid var(--border); border-radius:10px;
+      padding:10px; outline:none;
+    }
+    input[type="text"]::placeholder{ color:rgba(231,231,234,0.45); }
+
+    .row{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:10px; flex-wrap:wrap; }
+    .leftrow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .btn{
+      background:var(--panel); color:var(--text);
+      border:1px solid var(--border); border-radius:10px;
+      padding:10px 12px; cursor:pointer;
+    }
+    .btn:hover{ border-color:rgba(255,255,255,0.18); }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border:1px solid var(--border);
+      border-radius:999px; background:var(--panel2);
+      color:var(--muted); font-size:12px;
+    }
+
+    .cards{ padding:16px; }
+    .card{
+      max-width:1280px; margin:0 auto 14px auto;
+      border:1px solid var(--border); border-radius:16px;
+      background:linear-gradient(180deg, rgba(17,19,26,0.96), rgba(15,17,23,0.96));
+      overflow:hidden;
+    }
+    .card-inner{ display:grid; grid-template-columns: 44px 420px 1fr; }
+    .flagcol{
+      border-right:1px solid var(--border);
+      display:flex; justify-content:center; align-items:flex-start;
+      padding-top:14px;
+      background:rgba(255,255,255,0.01);
+    }
+    .flagbox{ transform:scale(1.1); }
+
+    .video{
+      border-right:1px solid var(--border);
+      background:#000; min-height:240px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    video{ width:100%; height:100%; max-height:320px; object-fit:contain; background:#000; }
+    .v-placeholder{ padding:14px; color:var(--muted); font-size:13px; line-height:1.35; }
+
+    .content{ padding:14px 16px; }
+    .meta{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+    .meta strong{ font-weight:650; }
+    .muted{ color:var(--muted); }
+    .question{ font-size:14px; line-height:1.45; margin:8px 0 10px 0; }
+
+    .options{ margin:8px 0 10px 0; padding:0; list-style:none; }
+    .options li{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px; margin-bottom:8px;
+      background:rgba(255,255,255,0.02);
+      font-size:13px; line-height:1.35;
+    }
+    .options li.correct{
+      border-color:rgba(46,204,113,0.45);
+      box-shadow:0 0 0 1px rgba(46,204,113,0.15) inset;
+    }
+
+    .preds{ margin-top:10px; }
+    .preds-title{ font-size:12px; color:var(--muted); margin:0 0 6px 0; }
+    .pred-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+    .pred-pill{
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      background:rgba(255,255,255,0.02);
+      color:var(--muted);
+    }
+    .pred-pill.good{ border-color:rgba(46,204,113,0.35); color:rgba(46,204,113,0.95); }
+    .pred-pill.bad{ border-color:rgba(231,76,60,0.35); color:rgba(231,76,60,0.95); }
+
+    .footerbar{
+      max-width:1280px; margin:0 auto;
+      padding:0 16px 16px 16px;
+      display:flex; justify-content:space-between; align-items:center;
+      gap:10px; flex-wrap:wrap;
+    }
+    .small{ font-size:12px; color:var(--muted); }
+    .select-inline{ display:inline-flex; gap:8px; align-items:center; }
+
+    @media (max-width: 1050px){
+      .card-inner{ grid-template-columns: 44px 1fr; }
+      .video{ border-right:none; border-bottom:1px solid var(--border); }
+      .controls{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="container">
+      <div class="title">{{TITLE}}</div>
+
+      <div class="controls">
+        <div class="control">
+          <label>Dataset</label>
+          <select id="datasetFilter"></select>
+        </div>
+
+        <div class="control">
+          <label>Task type</label>
+          <select id="taskTypeFilter"></select>
+        </div>
+
+        <div class="control">
+          <label>Flag</label>
+          <select id="flagFilter">
+            <option value="all" selected>All</option>
+            <option value="flagged">Flagged</option>
+            <option value="unflagged">Not flagged</option>
+          </select>
+        </div>
+
+        <!-- Injected experiment correctness tri-state filters -->
+        {{EXP_FILTERS}}
+
+        <div class="control">
+          <label>Search (question / options / id)</label>
+          <input id="searchBox" type="text" placeholder="e.g., microwave, q001, Blue..." />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="leftrow">
+          <label class="pill">
+            <input type="checkbox" id="onlyDisagree" />
+            Only disagreements
+          </label>
+
+          <span class="pill">
+            Speed:
+            <button class="btn" id="slowerBtn" style="padding:6px 10px;">-</button>
+            <span id="speedLabel">1.0x</span>
+            <button class="btn" id="fasterBtn" style="padding:6px 10px;">+</button>
+          </span>
+
+          <button class="btn" id="resetBtn">Reset</button>
+          <span class="pill" id="countPill">0 rows</span>
+        </div>
+
+        <div class="leftrow">
+          <span class="select-inline">
+            <span class="small">Sort</span>
+            <select id="sortKey">
+              <option value="__index">Original</option>
+              <option value="dataset">Dataset</option>
+              <option value="task_type">Task type</option>
+              <option value="question_id">Question ID</option>
+              {{SORT_EXP_OPTIONS}}
+            </select>
+            <select id="sortDir">
+              <option value="asc">Asc</option>
+              <option value="desc">Desc</option>
+            </select>
+          </span>
+
+          <span class="select-inline">
+            <span class="small">Page size</span>
+            <select id="pageSize">
+              <option>20</option>
+              <option selected>50</option>
+              <option>100</option>
+            </select>
+          </span>
+
+          <button class="btn" id="prevBtn">Prev</button>
+          <button class="btn" id="nextBtn">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="footerbar">
+    <div class="small" id="pageInfo">Page 1</div>
+    <div class="small">Autoplay requires muted; videos will be muted by default.</div>
+  </div>
+
+  <script type="application/json" id="exp-cols-json">{{EXP_COLS_JSON}}</script>
+
+  <script>
+    const expCols = JSON.parse(document.getElementById("exp-cols-json").textContent);
+    document.documentElement.style.setProperty("--exp-cols", expCols.length);
+
+    const els = {
+      datasetFilter: document.getElementById("datasetFilter"),
+      taskTypeFilter: document.getElementById("taskTypeFilter"),
+      flagFilter: document.getElementById("flagFilter"),
+      searchBox: document.getElementById("searchBox"),
+      onlyDisagree: document.getElementById("onlyDisagree"),
+      resetBtn: document.getElementById("resetBtn"),
+      countPill: document.getElementById("countPill"),
+      cards: document.getElementById("cards"),
+      sortKey: document.getElementById("sortKey"),
+      sortDir: document.getElementById("sortDir"),
+      pageSize: document.getElementById("pageSize"),
+      prevBtn: document.getElementById("prevBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      pageInfo: document.getElementById("pageInfo"),
+      slowerBtn: document.getElementById("slowerBtn"),
+      fasterBtn: document.getElementById("fasterBtn"),
+      speedLabel: document.getElementById("speedLabel"),
+    };
+
+    const expFilterEls = {};
+    for (const c of expCols) expFilterEls[c] = document.getElementById(`filter__${c}`);
+
+    let rows = [];
+    let flags = {}; // key -> true
+    let page = 1;
+    let scrollHandler = null;
+
+    // Global playback speed
+    let playbackRate = 1.0;
+    let videoObserver = null;
+    let currentlyPlayingVideo = null; // Track the video that should be playing
+
+    function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+    function updateSpeedLabel(){
+      els.speedLabel.textContent = playbackRate.toFixed(1) + "x";
+    }
+    function applyPlaybackRateToVisibleVideos(){
+      document.querySelectorAll("video").forEach(v => {
+        if (isVideoLoaded(v)) {
+          v.playbackRate = playbackRate;
+        }
+      });
+    }
+
+    function getVisibilityRatio(video) {
+      const rect = video.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate visible area
+      const visibleTop = Math.max(0, rect.top);
+      const visibleBottom = Math.min(viewportHeight, rect.bottom);
+      const visibleLeft = Math.max(0, rect.left);
+      const visibleRight = Math.min(viewportWidth, rect.right);
+      
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+      const visibleArea = visibleHeight * visibleWidth;
+      const totalArea = rect.height * rect.width;
+      
+      return totalArea > 0 ? visibleArea / totalArea : 0;
+    }
+
+    function isVideoLoaded(video) {
+      // Video is loaded if it has a source element or doesn't have data-src
+      return video.querySelector("source") !== null || !video.hasAttribute("data-src");
+    }
+
+    function findMostVisibleVideo() {
+      const videos = Array.from(document.querySelectorAll("video"));
+      let mostVisible = null;
+      let maxRatio = 0;
+      
+      for (const video of videos) {
+        if (!isVideoLoaded(video)) continue;
+        const ratio = getVisibilityRatio(video);
+        if (ratio > maxRatio) {
+          maxRatio = ratio;
+          mostVisible = video;
+        }
+      }
+      
+      return mostVisible;
+    }
+
+    function updateAutoplay() {
+      // Pause all videos first
+      document.querySelectorAll("video").forEach(v => {
+        if (v !== currentlyPlayingVideo && !v.paused) {
+          v.pause();
+        }
+      });
+      
+      // Find and play the most visible video
+      const mostVisible = findMostVisibleVideo();
+      if (mostVisible && mostVisible !== currentlyPlayingVideo) {
+        currentlyPlayingVideo = mostVisible;
+        mostVisible.play().catch(() => {
+          // Autoplay may fail, that's okay
+        });
+      } else if (!mostVisible) {
+        currentlyPlayingVideo = null;
+      }
+    }
+
+    function setupVideoObserver() {
+      // Disconnect existing observer if any
+      if (videoObserver) {
+        videoObserver.disconnect();
+      }
+
+      // Create new IntersectionObserver for loading videos
+      videoObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          const video = entry.target;
+          const dataSrc = video.getAttribute("data-src");
+          
+          if (entry.isIntersecting && dataSrc && !isVideoLoaded(video)) {
+            // Video is visible and not yet loaded - load it
+            const source = document.createElement("source");
+            source.src = dataSrc;
+            source.type = "video/mp4";
+            video.appendChild(source);
+            video.load();
+            
+            // Apply playback rate after metadata loads
+            video.addEventListener("loadedmetadata", () => {
+              video.playbackRate = playbackRate;
+              updateAutoplay();
+            }, { once: true });
+            
+            // Remove data-src to prevent reloading
+            video.removeAttribute("data-src");
+          }
+        }
+        
+        // Update autoplay after visibility changes
+        updateAutoplay();
+      }, {
+        root: null,
+        rootMargin: "50px", // Start loading slightly before video enters viewport
+        threshold: [0, 0.1, 0.5, 1.0] // Multiple thresholds for better tracking
+      });
+
+      // Observe all videos (both loaded and unloaded)
+      document.querySelectorAll("video").forEach(video => {
+        videoObserver.observe(video);
+      });
+    }
+
+    function escapeHtml(s){
+      return (s ?? "").toString()
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function escapeAttr(s){
+      return (s ?? "").toString()
+        .replaceAll("&","&amp;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("<","%3C")
+        .replaceAll(">","%3E");
+    }
+    function uniq(arr){ return Array.from(new Set(arr)); }
+    function norm(s){ return (s ?? "").toString().toLowerCase(); }
+
+    function rowKey(r){
+      // stable unique key for flagging
+      // if question_id is unique globally, this is enough; otherwise dataset+task_type helps.
+      return `${r.dataset}||${r.task_type}||${r.question_id}`;
+    }
+
+    function getDisagree(r){
+      const known = expCols
+        .map(c => r.exp_correct[c])
+        .filter(v => v === true || v === false);
+      if (known.length <= 1) return false;
+      return !known.every(v => v === known[0]);
+    }
+
+    function applyFilters(){
+      const ds = els.datasetFilter.value;
+      const tt = els.taskTypeFilter.value;
+      const q = norm(els.searchBox.value);
+      const onlyDis = els.onlyDisagree.checked;
+      const flagMode = els.flagFilter.value; // all/flagged/unflagged
+
+      const tri = {};
+      for (const c of expCols) tri[c] = expFilterEls[c].value; // all/correct/incorrect
+
+      let out = rows;
+
+      if (ds !== "__all__") out = out.filter(r => r.dataset === ds);
+      if (tt !== "__all__") out = out.filter(r => r.task_type === tt);
+
+      if (q){
+        out = out.filter(r => {
+          const blob = [
+            r.question_id, r.question, r.options_raw, (r.options_list||[]).join(" | ")
+          ].map(norm).join(" ");
+          return blob.includes(q);
+        });
+      }
+
+      for (const c of expCols){
+        const v = tri[c];
+        if (v === "correct") out = out.filter(r => r.exp_correct[c] === true);
+        else if (v === "incorrect") out = out.filter(r => r.exp_correct[c] === false);
+      }
+
+      if (onlyDis) out = out.filter(r => getDisagree(r));
+
+      if (flagMode === "flagged") out = out.filter(r => flags[rowKey(r)] === true);
+      else if (flagMode === "unflagged") out = out.filter(r => !flags[rowKey(r)]);
+
+      return out;
+    }
+
+    function compare(a,b,key){
+      if (key === "__index") return a.__index - b.__index;
+      // allow sorting by exp correctness too
+      if (expCols.includes(key)){
+        const ra = a.exp_correct[key];
+        const rb = b.exp_correct[key];
+        const rank = (v) => v === false ? 0 : (v === true ? 1 : 2);
+        return rank(ra) - rank(rb);
+      }
+      const va = a[key], vb = b[key];
+      return (va ?? "").toString().localeCompare((vb ?? "").toString(), undefined, {numeric:true});
+    }
+
+    async function setFlag(key, value){
+      const resp = await fetch("/api/flag", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({key, flagged: value})
+      });
+      if (!resp.ok){
+        console.error("Failed to set flag", await resp.text());
+        return;
+      }
+      const out = await resp.json();
+      flags = out.flags || flags;
+    }
+
+    function renderCard(r){
+      const k = rowKey(r);
+      const isFlagged = flags[k] === true;
+
+      const optLis = (r.options_list || []).map((opt,i) => {
+        const cls = (r.correct_index === i) ? "correct" : "";
+        return `<li class="${cls}">${escapeHtml(opt)}</li>`;
+      }).join("");
+
+      const predPills = expCols.map(c => {
+        const letter = r.exp_pred[c] ?? "NA";
+        const choiceTxt = r.exp_choice_text[c] ?? "";
+        const ok = r.exp_correct[c];
+        const cls = ok === true ? "pred-pill good" : (ok === false ? "pred-pill bad" : "pred-pill");
+        const suffix = choiceTxt ? ` — ${escapeHtml(choiceTxt)}` : "";
+        return `<span class="${cls}">${escapeHtml(c)}: <strong>${escapeHtml(letter)}</strong>${suffix}</span>`;
+      }).join("");
+
+      const correctDisplay = r.correct_option ? escapeHtml(r.correct_option) : "—";
+
+      // Lazy loading: store URL in data-src, no source tag initially, no autoplay
+      const videoHtml = r.video_path
+  ? `<video controls muted playsinline preload="none" data-src="/api/video?path=${encodeURIComponent(r.video_path)}"></video>`
+  : `<div class="v-placeholder">No video_path provided.</div>`;
+
+      return `
+        <div class="card">
+          <div class="card-inner">
+            <div class="flagcol">
+              <input class="flagbox" type="checkbox" ${isFlagged ? "checked" : ""} data-flagkey="${escapeAttr(k)}" />
+            </div>
+
+            <div class="video">${videoHtml}</div>
+
+            <div class="content">
+              <div class="meta">
+                <strong>${escapeHtml(r.dataset)}</strong>
+                <span class="muted">${escapeHtml(r.task_type || "")}</span>
+                <span class="muted">${escapeHtml(r.question_id)}</span>
+              </div>
+
+              <div class="question">${escapeHtml(r.question)}</div>
+
+              <div class="muted small">
+                Correct: <strong style="color: var(--text)">${correctDisplay}</strong>
+              </div>
+
+              <ul class="options">
+                ${optLis || `<li class="muted">No parsed options. Raw: ${escapeHtml(r.options_raw || "")}</li>`}
+              </ul>
+
+              <div class="preds">
+                <div class="preds-title">Predictions (letter + option text)</div>
+                <div class="pred-grid">${predPills}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function render(){
+      const filtered = applyFilters();
+
+      const key = els.sortKey.value;
+      const dir = els.sortDir.value;
+      const sorted = filtered.slice().sort((a,b) => compare(a,b,key));
+      if (dir === "desc") sorted.reverse();
+
+      const ps = parseInt(els.pageSize.value, 10) || 50;
+      const total = sorted.length;
+      const totalPages = Math.max(1, Math.ceil(total / ps));
+      page = clamp(page, 1, totalPages);
+
+      const start = (page - 1) * ps;
+      const end = Math.min(total, start + ps);
+      const view = sorted.slice(start, end);
+
+      els.countPill.textContent = `${total} rows`;
+      els.pageInfo.textContent = `Page ${page} / ${totalPages} (showing ${start+1}-${end})`;
+
+      els.cards.innerHTML = view.map(renderCard).join("");
+
+      // wire flag checkboxes
+      document.querySelectorAll("input.flagbox").forEach(cb => {
+        cb.addEventListener("change", async (e) => {
+          const key = e.target.getAttribute("data-flagkey");
+          const val = e.target.checked;
+          // optimistic
+          if (val) flags[key] = true; else delete flags[key];
+          await setFlag(key, val);
+          // re-render if flag filter is active
+          if (els.flagFilter.value !== "all") render();
+        });
+      });
+
+      // Set up lazy loading observer for videos
+      setupVideoObserver();
+      
+      // Handle manual video play/pause - if user plays a video, pause others
+      document.querySelectorAll("video").forEach(video => {
+        video.addEventListener("play", () => {
+          // User manually started playing this video
+          currentlyPlayingVideo = video;
+          document.querySelectorAll("video").forEach(v => {
+            if (v !== video && !v.paused) {
+              v.pause();
+            }
+          });
+        });
+      });
+      
+      // Update autoplay on scroll (throttled) - set up once
+      if (!scrollHandler) {
+        let scrollTimeout = null;
+        scrollHandler = () => {
+          if (scrollTimeout) return;
+          scrollTimeout = setTimeout(() => {
+            updateAutoplay();
+            scrollTimeout = null;
+          }, 100);
+        };
+        window.addEventListener("scroll", scrollHandler, { passive: true });
+      }
+      
+      // Initial autoplay check
+      setTimeout(updateAutoplay, 100);
+      
+      updateSpeedLabel();
+    }
+
+    function resetFilters(){
+      els.datasetFilter.value = "__all__";
+      els.taskTypeFilter.value = "__all__";
+      els.flagFilter.value = "all";
+      els.searchBox.value = "";
+      els.onlyDisagree.checked = false;
+
+      for (const c of expCols) expFilterEls[c].value = "all";
+
+      els.sortKey.value = "__index";
+      els.sortDir.value = "asc";
+      els.pageSize.value = "50";
+      playbackRate = 1.0;
+
+      page = 1;
+      render();
+    }
+
+    async function init(){
+      // Fetch data + flags
+      const [dataResp, flagResp] = await Promise.all([
+        fetch("/api/data"),
+        fetch("/api/flags"),
+      ]);
+      rows = await dataResp.json();
+      flags = (await flagResp.json()).flags || {};
+
+      // dataset dropdown
+      const dsets = uniq(rows.map(r => r.dataset)).sort((a,b) => a.localeCompare(b));
+      els.datasetFilter.innerHTML = [`<option value="__all__">All</option>`]
+        .concat(dsets.map(d => `<option value="${escapeAttr(d)}">${escapeHtml(d)}</option>`)).join("");
+
+      // task_type dropdown
+      const tts = uniq(rows.map(r => r.task_type).filter(Boolean)).sort((a,b) => a.localeCompare(b));
+      els.taskTypeFilter.innerHTML = [`<option value="__all__">All</option>`]
+        .concat(tts.map(t => `<option value="${escapeAttr(t)}">${escapeHtml(t)}</option>`)).join("");
+
+      // events
+      els.datasetFilter.addEventListener("change", () => { page = 1; render(); });
+      els.taskTypeFilter.addEventListener("change", () => { page = 1; render(); });
+      els.flagFilter.addEventListener("change", () => { page = 1; render(); });
+      els.searchBox.addEventListener("input", () => { page = 1; render(); });
+      els.onlyDisagree.addEventListener("change", () => { page = 1; render(); });
+
+      for (const c of expCols) expFilterEls[c].addEventListener("change", () => { page = 1; render(); });
+
+      els.sortKey.addEventListener("change", () => { page = 1; render(); });
+      els.sortDir.addEventListener("change", () => { page = 1; render(); });
+      els.pageSize.addEventListener("change", () => { page = 1; render(); });
+
+      els.prevBtn.addEventListener("click", () => { page = Math.max(1, page - 1); render(); });
+      els.nextBtn.addEventListener("click", () => { page = page + 1; render(); });
+
+      els.slowerBtn.addEventListener("click", () => {
+        playbackRate = clamp(playbackRate - 0.25, 0.25, 4.0);
+        applyPlaybackRateToVisibleVideos();
+        updateSpeedLabel();
+      });
+      els.fasterBtn.addEventListener("click", () => {
+        playbackRate = clamp(playbackRate + 0.25, 0.25, 4.0);
+        applyPlaybackRateToVisibleVideos();
+        updateSpeedLabel();
+      });
+
+      els.resetBtn.addEventListener("click", resetFilters);
+
+      resetFilters();
+    }
+
+    init();
+  </script>
+</body>
+</html>

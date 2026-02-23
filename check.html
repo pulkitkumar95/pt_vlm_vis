@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video QA Report</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+        }}
+        
+        h1 {{
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }}
+        
+        .controls {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }}
+        
+        .control-group {{
+            margin-bottom: 15px;
+        }}
+        
+        .control-group:last-child {{
+            margin-bottom: 0;
+        }}
+        
+        label {{
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }}
+        
+        select, input[type="text"] {{
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }}
+        
+        .exp-filters {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }}
+        
+        .exp-filter {{
+            flex: 1;
+            min-width: 150px;
+        }}
+        
+        .tri-state {{
+            display: flex;
+            gap: 5px;
+        }}
+        
+        .tri-state button {{
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }}
+        
+        .tri-state button.active {{
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }}
+        
+        .tri-state button:hover {{
+            background: #2980b9;
+            color: white;
+        }}
+        
+        .checkbox-group {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        
+        input[type="checkbox"] {{
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }}
+        
+        .sort-controls {{
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }}
+        
+        .sort-select {{
+            width: auto;
+            min-width: 200px;
+        }}
+        
+        .sort-direction {{
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 100px;
+        }}
+        
+        .sort-direction:hover {{
+            background: #f0f0f0;
+        }}
+        
+        .results-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }}
+        
+        .pagination {{
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }}
+        
+        .pagination button {{
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }}
+        
+        .pagination button:hover:not(:disabled) {{
+            background: #f0f0f0;
+        }}
+        
+        .pagination button:disabled {{
+            opacity: 0.5;
+            cursor: not-allowed;
+        }}
+        
+        .pagination .page-numbers {{
+            display: flex;
+            gap: 5px;
+        }}
+        
+        .pagination .page-number {{
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            min-width: 40px;
+            text-align: center;
+        }}
+        
+        .pagination .page-number:hover {{
+            background: #f0f0f0;
+        }}
+        
+        .pagination .page-number.active {{
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }}
+        
+        .cards-container {{
+            display: grid;
+            gap: 20px;
+        }}
+        
+        .card {{
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            min-height: 300px;
+        }}
+        
+        .card-video {{
+            flex: 0 0 400px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        
+        .card-video video {{
+            width: 100%;
+            height: 100%;
+            max-height: 500px;
+        }}
+        
+        .card-content {{
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }}
+        
+        .card-header {{
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }}
+        
+        .question {{
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }}
+        
+        .options-list {{
+            margin-bottom: 15px;
+        }}
+        
+        .option {{
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border-left: 3px solid #ddd;
+            border-radius: 4px;
+        }}
+        
+        .option.correct {{
+            background: #d4edda;
+            border-left-color: #28a745;
+            font-weight: 600;
+        }}
+        
+        .correct-badge {{
+            display: inline-block;
+            padding: 4px 8px;
+            background: #28a745;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }}
+        
+        .exp-badges {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }}
+        
+        .exp-badge {{
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }}
+        
+        .exp-badge.true {{
+            background: #d4edda;
+            color: #155724;
+        }}
+        
+        .exp-badge.false {{
+            background: #f8d7da;
+            color: #721c24;
+        }}
+        
+        .exp-badge.null {{
+            background: #e2e3e5;
+            color: #383d41;
+        }}
+        
+        .stats {{
+            color: #666;
+            font-size: 14px;
+        }}
+        
+        @media (max-width: 968px) {{
+            .card {{
+                flex-direction: column;
+            }}
+            
+            .card-video {{
+                flex: 1;
+                min-height: 300px;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Video QA Report</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Dataset:</label>
+                <select id="datasetFilter">
+                    <option value="">All</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Experiment Filters:</label>
+                <div class="exp-filters" id="expFilters"></div>
+            </div>
+            
+            <div class="control-group">
+                <label>Search (question, options, question_id):</label>
+                <input type="text" id="searchBox" placeholder="Type to search...">
+            </div>
+            
+            <div class="control-group checkbox-group">
+                <input type="checkbox" id="onlyDisagreements">
+                <label for="onlyDisagreements" style="margin: 0; font-weight: normal;">Only show disagreements</label>
+            </div>
+            
+            <div class="control-group">
+                <div class="sort-controls">
+                    <label style="width: auto; margin-right: 10px;">Sort by:</label>
+                    <select id="sortSelect" class="sort-select">
+                        <option value="dataset">Dataset</option>
+                        <option value="question_id">Question ID</option>
+                    </select>
+                    <button id="sortDirection" class="sort-direction" title="Click to toggle sort direction">▲ Ascending</button>
+                    <select id="itemsPerPage" class="sort-select">
+                        <option value="20">20 per page</option>
+                        <option value="50" selected>50 per page</option>
+                        <option value="100">100 per page</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results-header">
+            <div class="stats" id="stats"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+        
+        <div class="cards-container" id="cardsContainer"></div>
+    </div>
+    
+    <script>
+        // Data
+        const allData = [{"dataset": "dataset1", "question_id": "q001", "video_path": "/path/to/video1.mp4", "question": "What color is the car in the video?", "options": ["A. Red", "B. Blue", "C. Green", "D. Yellow"], "correct_letter": "A", "correct_text": "A. Red", "exp1_pred": true, "exp2_pred": true, "exp3_pred": false}, {"dataset": "dataset1", "question_id": "q002", "video_path": "/path/to/video2.mp4", "question": "How many people are in the scene?", "options": ["A. One", "B. Two", "C. Three", "D. Four"], "correct_letter": "B", "correct_text": "B. Two", "exp1_pred": true, "exp2_pred": false, "exp3_pred": true}, {"dataset": "dataset2", "question_id": "q001", "video_path": "/path/to/video3.mp4", "question": "What action is being performed?", "options": ["A. Running", "B. Jumping", "C. Walking", "D. Sitting"], "correct_letter": "C", "correct_text": "C. Walking", "exp1_pred": true, "exp2_pred": false, "exp3_pred": true}, {"dataset": "dataset2", "question_id": "q002", "video_path": "/path/to/video4.mp4", "question": "What object is in the center?", "options": ["A. Ball", "B. Box", "C. Chair", "D. Table"], "correct_letter": "B", "correct_text": "B. Box", "exp1_pred": true, "exp2_pred": false, "exp3_pred": true}, {"dataset": "dataset1", "question_id": "q003", "video_path": "/path/to/video5.mp4", "question": "What is the weather like?", "options": ["A. Sunny", "B. Rainy", "C. Cloudy"], "correct_letter": "A", "correct_text": "A. Sunny", "exp1_pred": true, "exp2_pred": true, "exp3_pred": true}, {"dataset": "dataset2", "question_id": "q003", "video_path": "/path/to/video6.mp4", "question": "What time of day is it?", "options": ["A. Morning", "B. Afternoon", "C. Evening", "D. Night"], "correct_letter": "D", "correct_text": "D. Night", "exp1_pred": false, "exp2_pred": true, "exp3_pred": false}, {"dataset": "dataset3", "question_id": "q001", "video_path": "/path/to/video7.mp4", "question": "How many objects are visible?", "options": ["A. One", "B. Two", "C. Three"], "correct_letter": "B", "correct_text": "B. Two", "exp1_pred": true, "exp2_pred": true, "exp3_pred": false}, {"dataset": "dataset3", "question_id": "q002", "video_path": "/path/to/video8.mp4", "question": "What is the main subject doing?", "options": ["A. Running", "B. Walking", "C. Standing", "D. Sitting"], "correct_letter": "A", "correct_text": "A. Running", "exp1_pred": true, "exp2_pred": false, "exp3_pred": true}];
+        
+        // State
+        let filteredData = [...allData];
+        let currentPage = 1;
+        let itemsPerPage = 50;
+        let sortField = 'dataset';
+        let sortAscending = true;
+        
+        // Filters
+        const filters = {{
+            dataset: '',
+            search: '',
+            onlyDisagreements: false,
+            expFilters: {{}}
+        }};
+        
+        // Initialize
+        function init() {{
+            populateDatasetFilter();
+            populateExpFilters();
+            populateSortSelect();
+            updateSortDirectionButton();
+            setupEventListeners();
+            applyFilters();
+        }}
+        
+        function populateDatasetFilter() {{
+            const select = document.getElementById('datasetFilter');
+            const datasets = [...new Set(allData.map(d => d.dataset))].sort();
+            datasets.forEach(ds => {{
+                const option = document.createElement('option');
+                option.value = ds;
+                option.textContent = ds;
+                select.appendChild(option);
+            }});
+        }}
+        
+        function populateExpFilters() {{
+            const container = document.getElementById('expFilters');
+            if (!allData || allData.length === 0) return;
+            const expCols = Object.keys(allData[0] || {{}}).filter(k => k.startsWith('exp') && k.endsWith('_pred'));
+            
+            expCols.forEach(col => {{
+                filters.expFilters[col] = '';
+                
+                const div = document.createElement('div');
+                div.className = 'exp-filter';
+                
+                const label = document.createElement('label');
+                label.textContent = col.replace('_pred', '');
+                label.style.marginBottom = '5px';
+                div.appendChild(label);
+                
+                const triState = document.createElement('div');
+                triState.className = 'tri-state';
+                
+                ['All', 'True', 'False'].forEach((val, idx) => {{
+                    const btn = document.createElement('button');
+                    btn.textContent = val;
+                    btn.dataset.value = val === 'All' ? '' : val.toLowerCase();
+                    if (idx === 0) btn.classList.add('active');
+                    btn.onclick = () => {{
+                        filters.expFilters[col] = btn.dataset.value;
+                        triState.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        applyFilters();
+                    }};
+                    triState.appendChild(btn);
+                }});
+                
+                div.appendChild(triState);
+                container.appendChild(div);
+            }});
+        }}
+        
+        function populateSortSelect() {{
+            const select = document.getElementById('sortSelect');
+            if (!allData || allData.length === 0) return;
+            const expCols = Object.keys(allData[0] || {{}}).filter(k => k.startsWith('exp') && k.endsWith('_pred'));
+            
+            expCols.forEach(col => {{
+                const option = document.createElement('option');
+                option.value = col;
+                option.textContent = col.replace('_pred', '');
+                select.appendChild(option);
+            }});
+        }}
+        
+        function setupEventListeners() {{
+            document.getElementById('datasetFilter').addEventListener('change', (e) => {{
+                filters.dataset = e.target.value;
+                applyFilters();
+            }});
+            
+            document.getElementById('searchBox').addEventListener('input', (e) => {{
+                filters.search = e.target.value.toLowerCase();
+                applyFilters();
+            }});
+            
+            document.getElementById('onlyDisagreements').addEventListener('change', (e) => {{
+                filters.onlyDisagreements = e.target.checked;
+                applyFilters();
+            }});
+            
+            document.getElementById('sortSelect').addEventListener('change', (e) => {{
+                sortField = e.target.value;
+                applyFilters();
+            }});
+            
+            document.getElementById('sortDirection').addEventListener('click', () => {{
+                sortAscending = !sortAscending;
+                updateSortDirectionButton();
+                applyFilters();
+            }});
+            
+            document.getElementById('itemsPerPage').addEventListener('change', (e) => {{
+                itemsPerPage = parseInt(e.target.value);
+                currentPage = 1;
+                applyFilters();
+            }});
+        }}
+        
+        function updateSortDirectionButton() {{
+            const btn = document.getElementById('sortDirection');
+            btn.textContent = sortAscending ? '▲ Ascending' : '▼ Descending';
+            btn.title = 'Click to toggle sort direction';
+        }}
+        
+        function applyFilters() {{
+            filteredData = allData.filter(item => {{
+                // Dataset filter
+                if (filters.dataset && item.dataset !== filters.dataset) {{
+                    return false;
+                }}
+                
+                // Experiment filters
+                for (const [col, filterValue] of Object.entries(filters.expFilters)) {{
+                    if (filterValue !== '') {{
+                        const itemValue = item[col];
+                        if (filterValue === 'true' && itemValue !== true) return false;
+                        if (filterValue === 'false' && itemValue !== false) return false;
+                    }}
+                }}
+                
+                // Search filter
+                if (filters.search) {{
+                    const searchStr = filters.search;
+                    const searchable = (
+                        (item.question || '') + ' ' +
+                        (item.options || []).join(' ') + ' ' +
+                        (item.question_id || '')
+                    ).toLowerCase();
+                    if (!searchable.includes(searchStr)) {{
+                        return false;
+                    }}
+                }}
+                
+                // Disagreements filter
+                if (filters.onlyDisagreements) {{
+                    const expCols = Object.keys(filters.expFilters);
+                    const predictions = expCols.map(col => item[col]);
+                    const uniquePreds = [...new Set(predictions.filter(p => p !== null && p !== undefined))];
+                    if (uniquePreds.length <= 1) {{
+                        return false;
+                    }}
+                }}
+                
+                return true;
+            }});
+            
+            // Sort
+            filteredData.sort((a, b) => {{
+                let aVal = a[sortField];
+                let bVal = b[sortField];
+                
+                // Handle different types
+                if (typeof aVal === 'boolean') {{
+                    aVal = aVal ? 1 : 0;
+                    bVal = bVal ? 1 : 0;
+                }} else if (typeof aVal === 'string') {{
+                    // Try numeric comparison for question_id
+                    const aNum = parseInt(aVal);
+                    const bNum = parseInt(bVal);
+                    if (!isNaN(aNum) && !isNaN(bNum)) {{
+                        aVal = aNum;
+                        bVal = bNum;
+                    }}
+                }}
+                
+                if (aVal < bVal) return sortAscending ? -1 : 1;
+                if (aVal > bVal) return sortAscending ? 1 : -1;
+                return 0;
+            }});
+            
+            currentPage = 1;
+            render();
+        }}
+        
+        function render() {{
+            const totalItems = filteredData.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageData = filteredData.slice(startIdx, endIdx);
+            
+            // Update stats
+            document.getElementById('stats').textContent = 
+                `Showing ${{startIdx + 1}}-${{Math.min(endIdx, totalItems)}} of ${{totalItems}} results`;
+            
+            // Render pagination
+            renderPagination(totalPages);
+            
+            // Render cards
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = pageData.map(item => renderCard(item)).join('');
+        }}
+        
+        function renderPagination(totalPages) {{
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {{
+                if (currentPage > 1) {{
+                    currentPage--;
+                    render();
+                }}
+            }};
+            pagination.appendChild(prevBtn);
+            
+            const pageNumbers = document.createElement('div');
+            pageNumbers.className = 'page-numbers';
+            
+            const maxVisible = 10;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage < maxVisible - 1) {{
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }}
+            
+            for (let i = startPage; i <= endPage; i++) {{
+                const pageBtn = document.createElement('button');
+                pageBtn.className = 'page-number';
+                if (i === currentPage) pageBtn.classList.add('active');
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {{
+                    currentPage = i;
+                    render();
+                }};
+                pageNumbers.appendChild(pageBtn);
+            }}
+            
+            pagination.appendChild(pageNumbers);
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {{
+                if (currentPage < totalPages) {{
+                    currentPage++;
+                    render();
+                }}
+            }};
+            pagination.appendChild(nextBtn);
+        }}
+        
+        function escapeHtml(text) {{
+            if (text == null) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }}
+        
+        function renderCard(item) {{
+            const expCols = Object.keys(item).filter(k => k.startsWith('exp') && k.endsWith('_pred'));
+            const expBadges = expCols.map(col => {{
+                const value = item[col];
+                const className = value === true ? 'true' : (value === false ? 'false' : 'null');
+                const text = value === true ? '✓' : (value === false ? '✗' : '?');
+                return `<div class="exp-badge ${{className}}">${{escapeHtml(col.replace('_pred', ''))}}: ${{text}}</div>`;
+            }}).join('');
+            
+            const optionsHtml = (item.options || []).map((opt, idx) => {{
+                const letter = String.fromCharCode(65 + idx);
+                const isCorrect = item.correct_letter === letter || 
+                                  (item.correct_text && item.correct_text.toLowerCase() === String(opt).toLowerCase());
+                return `<div class="option ${{isCorrect ? 'correct' : ''}}">${{letter}}. ${{escapeHtml(String(opt))}}</div>`;
+            }}).join('');
+            
+            const correctBadge = item.correct_letter || item.correct_text ? 
+                `<div class="correct-badge">Correct: ${{item.correct_letter ? escapeHtml(item.correct_letter) + '. ' : ''}}${{escapeHtml(String(item.correct_text || ''))}}</div>` : 
+                '';
+            
+            return `
+                <div class="card">
+                    <div class="card-video">
+                        <video controls>
+                            <source src="${{escapeHtml(item.video_path)}}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">${{escapeHtml(item.dataset)}} - ${{escapeHtml(item.question_id)}}</div>
+                        <div class="question">${{escapeHtml(item.question)}}</div>
+                        ${{correctBadge}}
+                        <div class="options-list">
+                            ${{optionsHtml}}
+                        </div>
+                        <div class="exp-badges">
+                            ${{expBadges}}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }}
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
